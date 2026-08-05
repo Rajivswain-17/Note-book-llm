@@ -1,0 +1,5 @@
+allowBuilds:
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@base-ui/react@1.7.0'
+  - '@base-ui/utils@0.3.2'
