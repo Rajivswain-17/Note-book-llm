@@ -7,7 +7,7 @@ import {
     importYoutubeSource,
     listSourcesForWorkspace,
     uploadPdfSource,
-} from "../services/source.service.js";
+} from "../services/source.services.js";
 import { ValidationError } from "../types/app-error.js";
 import { getZodFieldErrors } from "../utils/zod-error.js";
 import {
@@ -17,7 +17,7 @@ import {
     listSourcesQuerySchema,
     sourceIdParamSchema,
     workspaceIdParamSchema,
-} from "../validators/source.validator.js";
+} from "../validator/source.validator.js";
 
 function parseWorkspaceId(params: Request["params"]) {
     const parsed = workspaceIdParamSchema.safeParse(params);
