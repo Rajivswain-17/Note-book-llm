@@ -1,5 +1,6 @@
 allowBuilds:
   '@prisma/engines': false
+  better-sqlite3: false
   esbuild: false
   leveldown: set this to true or false
   prisma: false
