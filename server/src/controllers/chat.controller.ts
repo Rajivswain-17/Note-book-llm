@@ -6,7 +6,7 @@ import {
     getConversationMessagesForWorkspace,
     listConversationsForWorkspace,
     streamWorkspaceChat,
-} from "../services/chat.service.js";
+} from "../services/chat.services.js";
 import {
     chatBodySchema,
     conversationIdParamSchema,
