@@ -56,8 +56,11 @@ export function LoginForm({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const rawCallback = searchParams.get("callbackUrl");
     const callbackUrl =
-        searchParams.get("callbackUrl") ?? authRoutes.dashboard;
+        rawCallback && rawCallback.startsWith("/dashboard")
+            ? rawCallback
+            : authRoutes.dashboard;
 
     async function handleGoogleSignIn() {
         setIsLoading(true);

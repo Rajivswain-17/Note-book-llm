@@ -1,11 +1,15 @@
 import type { Request, Response } from "express";
 import {
+    bulkDeleteSourcesForWorkspace,
     createTextOrMarkdownSource,
     deleteSourceForWorkspace,
     getSourceForWorkspace,
+    importWebSearchSource,
     importWebsiteSource,
     importYoutubeSource,
     listSourcesForWorkspace,
+    reprocessAllSourcesForWorkspace,
+    reprocessSourceById,
     uploadPdfSource,
 } from "../services/source.services.js";
 import { ValidationError } from "../types/app-error.js";
@@ -180,3 +184,49 @@ export async function deleteSource(req: Request, res: Response) {
     );
     res.status(204).send();
 }
+
+export async function bulkDeleteSources(req: Request, res: Response) {
+    const { workspaceId } = parseWorkspaceId(req.params);
+    const sourceIds = Array.isArray(req.body.sourceIds) ? req.body.sourceIds : [];
+    await bulkDeleteSourcesForWorkspace(
+        workspaceId,
+        req.session.user.id,
+        sourceIds,
+    );
+    res.status(204).send();
+}
+
+export async function reprocessSources(req: Request, res: Response) {
+    const { workspaceId } = parseWorkspaceId(req.params);
+    const sourceIds = Array.isArray(req.body.sourceIds) ? req.body.sourceIds : undefined;
+    const result = await reprocessAllSourcesForWorkspace(
+        workspaceId,
+        req.session.user.id,
+        sourceIds,
+    );
+    res.json(result);
+}
+
+export async function reprocessSource(req: Request, res: Response) {
+    const { workspaceId, sourceId } = parseSourceParams(req.params);
+    const result = await reprocessSourceById(
+        workspaceId,
+        sourceId,
+        req.session.user.id,
+    );
+    res.json(result);
+}
+
+export async function importWebSearch(req: Request, res: Response) {
+    const { workspaceId } = parseWorkspaceId(req.params);
+    const { title, content, url } = req.body as { title: string; content: string; url: string };
+    if (!title || !content || !url) {
+        throw new ValidationError("title, content, and url are required");
+    }
+    const source = await importWebSearchSource(
+        workspaceId,
+        req.session.user.id,
+        { title, content, url },
+    );
+    res.status(201).json(source);
+}

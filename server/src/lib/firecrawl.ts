@@ -9,9 +9,24 @@ export async function scrapeWebsite(url: string) {
     }
 
     const client = new Firecrawl({ apiKey });
-    const result = await client.scrape(url, {
-        formats: ["markdown"],
-    });
+
+    let result;
+    try {
+        result = await client.scrape(url, {
+            formats: ["markdown"],
+        });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "";
+        const code = (err as NodeJS.ErrnoException).code ?? "";
+        if (code === "ETIMEDOUT" || code === "ECONNREFUSED" || code === "ENOTFOUND") {
+            throw new ValidationError(
+                "Could not reach the Firecrawl API. Check your internet connection or Firecrawl API key.",
+            );
+        }
+        throw new ValidationError(
+            `Failed to scrape URL: ${message || "Unknown error"}`
+        );
+    }
 
     const markdown = result.markdown?.trim();
 
@@ -24,4 +39,4 @@ export async function scrapeWebsite(url: string) {
         title: result.metadata?.title,
         sourceUrl: result.metadata?.sourceURL ?? url,
     };
-}
+}

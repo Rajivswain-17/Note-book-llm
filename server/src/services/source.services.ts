@@ -8,6 +8,7 @@ import {
     deleteSourceRecord,
     findSourceByIdAndWorkspaceId,
     findSourcesByWorkspaceId,
+    updateSourceRecord,
     type SourceRecord,
 } from "../repository/source.repository.js";
 import { NotFoundError } from "../types/app-error.js";
@@ -85,13 +86,13 @@ export async function createTextOrMarkdownSource(
 ) {
     await assertWorkspaceAccess(workspaceId, userId);
 
-    // return createAndProcessSource({
-    //     workspaceId,
-    //     type: input.type,
-    //     title: input.title,
-    //     content: input.content,
-    //     status: "PENDING",
-    // });
+    return createAndProcessSource({
+        workspaceId,
+        type: input.type,
+        title: input.title,
+        content: input.content,
+        status: "PENDING",
+    });
 }
 
 
@@ -180,3 +181,63 @@ export async function importYoutubeSource(
         },
     });
 }
+
+export async function importWebSearchSource(
+    workspaceId: string,
+    userId: string,
+    input: { title: string; content: string; url: string },
+) {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    return createAndProcessSource({
+        workspaceId,
+        type: "WEBSITE",
+        title: input.title,
+        content: input.content,
+        url: input.url,
+        status: "PENDING",
+        metadata: {
+            importedFrom: input.url,
+        },
+    });
+}
+
+export async function reprocessSourceById(
+    workspaceId: string,
+    sourceId: string,
+    userId: string,
+) {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    const source = await findSourceByIdAndWorkspaceId(sourceId, workspaceId);
+    if (!source) {
+        throw new NotFoundError("Source not found");
+    }
+
+    await updateSourceRecord(sourceId, { status: "PENDING" });
+
+    await enqueueSourceProcessing({ sourceId, workspaceId });
+
+    return { reprocessed: true };
+}
+
+export async function reprocessAllSourcesForWorkspace(
+    workspaceId: string,
+    userId: string,
+    sourceIds?: string[],
+) {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    const sources = sourceIds?.length
+        ? await Promise.all(
+              sourceIds.map((id) => findSourceByIdAndWorkspaceId(id, workspaceId)),
+          ).then((results) => results.filter((s): s is SourceRecord => s !== null))
+        : await findSourcesByWorkspaceId(workspaceId);
+
+    for (const source of sources) {
+        await updateSourceRecord(source.id, { status: "PENDING" });
+        await enqueueSourceProcessing({ sourceId: source.id, workspaceId });
+    }
+
+    return { reprocessed: sources.length };
+}

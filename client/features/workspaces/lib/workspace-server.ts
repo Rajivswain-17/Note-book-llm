@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import type { Workspace } from "./types";
 
-const apiUrl = process.env.API_URL ?? "http://localhost:8080";
+const apiUrl = process.env.API_URL ?? "http://localhost:8081";
 
 async function fetchWorkspace(id: string): Promise<Workspace | null> {
     const requestHeaders = await headers();
@@ -24,5 +24,9 @@ async function fetchWorkspace(id: string): Promise<Workspace | null> {
 }
 
 export async function getWorkspaceOrNull(id: string) {
-    return fetchWorkspace(id);
+    try {
+        return await fetchWorkspace(id);
+    } catch {
+        return null;
+    }
 }
